@@ -28,6 +28,10 @@ namespace ChalkPhysics
             ink._t = t;
             t.supportRichText = true;
             t.resizeTextForBestFit = false;
+            // one line, never shrunk: a line taller than its box (a glyph from a fallback font, like the ↑ Ink Free
+            // lacks, brings a taller line) would otherwise not be drawn at all
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
             ink._s = UIF.Shape(t.transform, 5, "Bulbs");
             return ink;
         }
