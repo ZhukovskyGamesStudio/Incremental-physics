@@ -47,7 +47,7 @@ namespace ChalkPhysics
     {
         public static GameState I;
         public static float DevSpeed = 1f;
-        public const int BaseActions = 6;
+        public const int BaseActions = 3;
 
         public readonly double[] Cur = new double[4];
         public readonly double[] Total = new double[4];
@@ -173,7 +173,7 @@ namespace ChalkPhysics
         public double AutoMult { get { double m = 1; foreach (var p in Perks) { var d = Defs.Pk(p); if (d != null && d.kind == PerkKind.AutoMult) m *= d.value; } return m; } }
         public double StationMult(string station) { double m = 1; foreach (var p in Perks) { var d = Defs.Pk(p); if (d != null && d.kind == PerkKind.StationMult && d.station == station) m *= d.value; } return m; }
         public float SwingPeriod => Mathf.Max(0.3f, (float)V("T"));
-        public int SampleCount { get { int n = 4; foreach (var p in Perks) { var d = Defs.Pk(p); if (d != null && d.kind == PerkKind.Samples) n += (int)d.value; } return n; } }
+        public int SampleCount { get { int n = 3; foreach (var p in Perks) { var d = Defs.Pk(p); if (d != null && d.kind == PerkKind.Samples) n += (int)d.value; } return n; } }
         public double GoldChance => 0.06 + (HasPerk("gold1") ? 0.06 : 0) + (HasPerk("gold2") ? 0.08 : 0) + (HasPerk("gold3") ? 0.1 : 0);
         public double CurMult(Cur c) { double m = 1; foreach (var p in Perks) { var d = Defs.Pk(p); if (d != null && d.kind == PerkKind.CurMult && d.cur == c) m *= d.value; } return m; }
         /// What a golden specimen multiplies an energy experiment by.

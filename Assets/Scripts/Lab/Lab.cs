@@ -14,7 +14,7 @@ namespace ChalkPhysics
     {
         public const float LW = 1920, LH = 1080;
         public const float BG = 24000, Tile = 700;   // pannable board texture: size and tile period (design units)
-        const float NODE = 112, SMALL = 92;
+        const float NODE = 128, SMALL = 108;
         public RectTransform Content { get; private set; }   // fixed layer (design 1920x1080)
         RectTransform _board;                                 // pannable layer inside Content
 
@@ -120,10 +120,12 @@ namespace ChalkPhysics
         Vector2 _lastSlot, _lastDir;
         int _slotCount;
 
-        /// The pan that shows the frontier of the tree: its newest node a little ahead of centre (a young tree sits centred).
+        /// The pan that shows the frontier of the tree: its newest node a little ahead of centre. A tree that still fits
+        /// on the screen whole sits centred instead, so nothing of it hides under the buttons.
         Vector2 FrontierPan()
         {
-            Vector2 c = _slotCount <= 3 || _wide ? new Vector2((_minX + _maxX) / 2, (_minY + _maxY) / 2) : _lastSlot - _lastDir * 150;
+            bool fits = (_maxX - _minX + 320) * _zoomT < LW - 120 && (_maxY - _minY + 320) * _zoomT < Top - Bottom;
+            Vector2 c = _slotCount <= 3 || _wide || fits ? new Vector2((_minX + _maxX) / 2, (_minY + _maxY) / 2) : _lastSlot - _lastDir * 150;
             return ClampPan(-c * _zoomT + new Vector2(0, (Top + Bottom) / 2));
         }
 
@@ -148,7 +150,7 @@ namespace ChalkPhysics
         }
 
         // ---------------- the tree: a rectangular spiral growing out of the centre ----------------
-        const float GAP = 900, STEP = 190, CHAIN = 120, CORNER = 150;
+        const float GAP = 900, STEP = 218, CHAIN = 136, CORNER = 168;
         static float Radius(string code) => Defs.Kind(code) == 'L' ? LetterTile.TW / 2 : NODE / 2;
 
         class Slot { public string code, inward; public Vector2 pos, dir, n; public int seg, layer; }
@@ -176,7 +178,6 @@ namespace ChalkPhysics
 
         void Bounds(Vector2 p) { _minX = Mathf.Min(_minX, p.x); _maxX = Mathf.Max(_maxX, p.x); _minY = Mathf.Min(_minY, p.y); _maxY = Mathf.Max(_maxY, p.y); }
 
-        const float TreeGap = 3400;                         // the epochs' trees stand side by side, never joined
         readonly List<GameObject> _titles = new List<GameObject>();
         readonly HashSet<string> _slotSeen = new HashSet<string>();
         int _trees;
@@ -198,9 +199,9 @@ namespace ChalkPhysics
             _minX = _maxX = _minY = _maxY = 0;
             int count = 0, trees = 0;
             Slot fresh = null, newest = null;
+            float nextX = 0;                                  // where the next tree may begin: just past the last one
             for (int era = 0; era <= G.Era; era++)
             {
-                var origin = new Vector2(era * TreeGap, 0);
                 // the trunk: one slot per layer, another for the second formula of a pair; a second letter hangs on the inner side
                 var slots = new List<Slot>();
                 for (int k = 0; k < Defs.Tree.Length; k++)
@@ -213,7 +214,6 @@ namespace ChalkPhysics
                     for (int i = 1; i < layer.Length; i++) if (Defs.Kind(layer[i]) == 'F') slots.Add(new Slot { code = layer[i], layer = k });
                 }
                 if (slots.Count == 0) continue;
-                trees++;
                 // slots sit along the spiral STEP apart, never too close to a corner
                 float s = 0;
                 foreach (var sl in slots)
@@ -222,10 +222,16 @@ namespace ChalkPhysics
                     if (seg > 0 && s - _cum[seg] < CORNER) s = _cum[seg] + CORNER;
                     else if (_cum[seg + 1] - s < CORNER) s = _cum[seg + 1] + CORNER;
                     PathAt(s, out sl.pos, out sl.dir, out sl.seg);
-                    sl.pos += origin;
                     sl.n = new Vector2(sl.dir.y, -sl.dir.x);   // outward: away from the centre of the spiral
                     s += STEP;
                 }
+                // the epochs' trees stand side by side, never joined, and only as far apart as they are big right now
+                // (a fresh tree next to a young one, not across an empty board); its title and left-hanging chains count
+                float left = -560;
+                foreach (var sl in slots) left = Mathf.Min(left, sl.pos.x - (sl.n.x < -0.5f ? 900 : 240));
+                var origin = new Vector2(trees == 0 ? 0 : nextX - left, 0);
+                foreach (var sl in slots) sl.pos += origin;
+                trees++;
                 if (G.Era > 0) EraTitle(era, origin);
                 for (int i = 0; i < slots.Count; i++)
                 {
@@ -245,12 +251,12 @@ namespace ChalkPhysics
                     else if (Defs.Kind(sl.code) == 'L') BuildChain("L:" + Defs.Id(sl.code), sl.pos, r, sl.n, 5);
                     if (sl.inward != null)
                     {   // the second letter of a pair: on the inner side, sprouting from the previous node like its sibling
-                        var lp = sl.pos - sl.n * 134;
+                        var lp = sl.pos - sl.n * 160;
                         var col = G.NodeDone(sl.inward) ? Lit : Dim;
                         var pv = i > 0 ? slots[i - 1] : null;
                         if (pv != null && pv.seg == sl.seg)
                         {
-                            var c = pv.pos - sl.n * 134;
+                            var c = pv.pos - sl.n * 160;
                             _edges.Line(pv.pos - sl.n * (Radius(pv.code) + 4), c, col, 3f);
                             _edges.Line(c, lp - sl.dir * (LetterTile.TW / 2 + 4), col, 3f);
                         }
@@ -263,6 +269,7 @@ namespace ChalkPhysics
                 newest = slots[slots.Count - 1];
                 foreach (var sl in slots) _slotSeen.Add(sl.code);
                 count += slots.Count;
+                nextX = _maxX + 200;
             }
             foreach (var kv in _tiles) kv.Value.gameObject.SetActive(shown.Contains(kv.Key));
             // the camera follows whatever has just grown, in whichever tree it grew
@@ -306,7 +313,7 @@ namespace ChalkPhysics
             {
                 var it = chain[i];
                 bool have = it.device != null ? G.Has(it.device.id) : G.HasPerk(it.perk.id);
-                var cp = origin + dir * (150 + i * CHAIN);
+                var cp = origin + dir * (168 + i * CHAIN);
                 _edges.Line(from + dir * (fromR + 4), cp - dir * (SMALL / 2 + 4), have ? Lit : Dim, have ? 2.5f : 2f);
                 if (it.device != null) BuildDeviceNode(it.device, cp); else BuildPerkNode(it.perk, cp);
                 Bounds(cp);
@@ -713,20 +720,27 @@ namespace ChalkPhysics
             _tip.SetAsLastSibling();
             _tipTitle.text = ChalkTex.Sym(title);
             _tipBody.text = body ?? "";
-            _tipBody.rectTransform.sizeDelta = new Vector2(430, 400);
+            const float inner = 470;
+            _tipW = inner + 30;
+            _tipTitle.rectTransform.sizeDelta = new Vector2(inner, 400);
+            _tipBody.rectTransform.sizeDelta = new Vector2(inner, 400);
+            _tipStat.rectTransform.sizeDelta = new Vector2(inner, 34);
+            float th = Mathf.Max(36, _tipTitle.preferredHeight);
             bool hasBody = _tipBody.text.Length > 0, hasStat = !string.IsNullOrEmpty(stat);
             float bh = hasBody ? Mathf.Max(28, _tipBody.preferredHeight) : 0;
             float sh = hasStat ? 38 : 0;
-            _tipW = 460; _tipH = 58 + bh + sh + 18;
+            float top = 12 + th + 8;                                   // where the body starts, under however many title lines
+            _tipH = top + bh + sh + 18;
             _tip.sizeDelta = new Vector2(_tipW, _tipH);
-            _tipTitle.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 10 - 19);
-            _tipBody.rectTransform.sizeDelta = new Vector2(430, bh + 4);
-            _tipBody.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 56 - bh / 2);
+            _tipTitle.rectTransform.sizeDelta = new Vector2(inner, th + 4);
+            _tipTitle.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 12 - th / 2);
+            _tipBody.rectTransform.sizeDelta = new Vector2(inner, bh + 4);
+            _tipBody.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - top - bh / 2);
             _tipStat.gameObject.SetActive(hasStat);
             if (hasStat)
             {
                 _tipStat.color = statCol ?? ChalkTex.Yellow;
-                _tipStat.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 56 - bh - 4 - 17);
+                _tipStat.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - top - bh - 4 - 17);
                 _tipInk.Set(stat, _tipStat.color);
                 _tipInk.Refresh();
             }
@@ -850,7 +864,6 @@ namespace ChalkPhysics
                 bool bulb = i == (int)Cur.Obs;
                 float shift = bulb ? -23f : 0f;
                 _cur[i].rectTransform.anchoredPosition = new Vector2(cx + shift, 500);
-                if (bulb) DrawIcon(_curIcons, "bulb", ChalkTex.Cyan, 0.95f, new Vector2(cx + shift + _cur[i].preferredWidth / 2 + 28, 501));
                 // the counter ticks up to its value and gives a little jump when it grows
                 double target = G.Cur[i];
                 if (target > _curTarget[i] + 1e-9 && GameState.Fmt(target) != GameState.Fmt(_curTarget[i])) _curFlash[i] = 1;
@@ -860,6 +873,8 @@ namespace ChalkPhysics
                 _curFlash[i] = Mathf.Max(0, _curFlash[i] - Time.deltaTime * 2f);
                 _cur[i].transform.localScale = Vector3.one * (1 + 0.18f * _curFlash[i]);
                 _cur[i].text = GameState.FmtCur(_shownCur[i], (Cur)i);
+                // the bulb goes after this frame's number, as wide as it is drawn right now (it jumps when it grows)
+                if (bulb) DrawIcon(_curIcons, "bulb", ChalkTex.Cyan, 0.95f, new Vector2(cx + shift + _cur[i].preferredWidth * _cur[i].transform.localScale.x / 2 + 28, 501));
                 shown++;
             }
 

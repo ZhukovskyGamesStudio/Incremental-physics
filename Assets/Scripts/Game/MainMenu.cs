@@ -52,7 +52,7 @@ namespace ChalkPhysics
             }
             ChalkTex.Math(UIF.Text(_content, "E = m·g·h", 40, new Color(1, 1, 1, 0.12f), new Vector2(-650, 100), new Vector2(400, 60))).transform.localRotation = Quaternion.Euler(0, 0, 6);
             ChalkTex.Math(UIF.Text(_content, "T = 2π·√(l/g)", 34, new Color(1, 1, 1, 0.1f), new Vector2(660, 110), new Vector2(420, 60))).transform.localRotation = Quaternion.Euler(0, 0, -5);
-            ChalkTex.Math(UIF.Text(_content, "I = U / R", 34, new Color(1, 1, 1, 0.1f), new Vector2(560, -170), new Vector2(360, 60))).transform.localRotation = Quaternion.Euler(0, 0, 4);
+            ChalkTex.Math(UIF.Text(_content, "I = U / R", 34, new Color(1, 1, 1, 0.1f), new Vector2(-600, -150), new Vector2(360, 60))).transform.localRotation = Quaternion.Euler(0, 0, 4);
 
             // the title is drawn, not typed (see Logo), with the demo tag pinned to its corner
             var logo = Logo.Build(_content);
@@ -110,7 +110,7 @@ namespace ChalkPhysics
             sc.onHover = h => _sound.localScale = Vector3.one * (h ? 1.06f : 1f);
             DrawSound();
 
-            UIF.Text(_content, "Zhukovsky Games", 26, new Color(1, 1, 1, 0.35f), new Vector2(780, -480), new Vector2(360, 40), TextAnchor.MiddleRight);
+            UIF.Text(_content, "Zhukovsky Games", 26, new Color(1, 1, 1, 0.35f), new Vector2(720, -480), new Vector2(360, 40), TextAnchor.MiddleRight);
         }
 
         void DrawSound()

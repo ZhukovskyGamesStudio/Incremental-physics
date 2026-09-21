@@ -17,14 +17,29 @@ namespace ChalkPhysics
 
         const float Floor = -150;       // lower bench
         const float Shelf2 = 330;       // upper bench
-        const float TrayY = -340;       // the box of samples
+        // the box of samples: under the bench, or — while the bench of the first epoch holds only one or two
+        // instruments — right on the table beside them, so the camera can come close and the first instrument is big
+        bool TrayOnTable { get { if (G.Revolutions > 0) return false; int n = 0; foreach (var kv in O) if (StationBuilt(kv.Key)) n++; return n <= 2; } }
+        float TrayY => TrayOnTable ? Floor + 44 : -262;
+        float TrayX
+        {
+            get
+            {
+                if (!TrayOnTable) return 0;
+                float left = 1e9f;
+                foreach (var kv in O) if (StationBuilt(kv.Key)) left = Mathf.Min(left, StationRect(kv.Key).xMin);
+                if (left > 1e8f) left = 0;
+                int n = Mathf.Max(1, G.Samples.Count);
+                return left - 110 - ((n - 1) / 2f * 120f + 70);
+            }
+        }
 
         // instruments alternate right / left of the centre in the order they are discovered
         static readonly Dictionary<string, Vector2> O = new Dictionary<string, Vector2>
         {
-            { "fall", new Vector2(0, Floor) }, { "dyna", new Vector2(230, Floor) }, { "spring", new Vector2(-220, Floor) },
-            { "pend", new Vector2(400, Floor) }, { "arch", new Vector2(-480, Floor) }, { "density", new Vector2(660, Floor) },
-            { "slide", new Vector2(-720, Floor) }, { "friction", new Vector2(880, Floor) }, { "fly", new Vector2(-1000, Floor) },
+            { "dyna", new Vector2(0, Floor) }, { "fall", new Vector2(250, Floor) }, { "spring", new Vector2(-230, Floor) },
+            { "pend", new Vector2(530, Floor) }, { "arch", new Vector2(-560, Floor) }, { "density", new Vector2(850, Floor) },
+            { "slide", new Vector2(-800, Floor) }, { "friction", new Vector2(1080, Floor) }, { "fly", new Vector2(-1060, Floor) },
             // the upper bench: the circuit in the middle (it grows both ways), the steam instruments on either side
             { "stand", new Vector2(0, Shelf2) },
             { "heater", new Vector2(560, Shelf2) }, { "engine", new Vector2(860, Shelf2) }, { "piston", new Vector2(1190, Shelf2) },
@@ -232,11 +247,13 @@ namespace ChalkPhysics
             float tl = 1e9f, tr = -1e9f;
             for (int i = 0; i < n; i++) { tl = Mathf.Min(tl, SamplePos(i).x - 80); tr = Mathf.Max(tr, SamplePos(i).x + 80); }
             if (G.Has("lab")) tr += 120;
-            var r = Rect.MinMaxRect(tl, TrayY - 100, tr, TrayY + (TrayRows - 1) * 125f + 60);
-            foreach (var kv in O) if (StationBuilt(kv.Key)) r = Union(r, StationRect(kv.Key));
-            float w = r.width + 100, h = r.height + 80;
-            _zoomT = Mathf.Clamp(Mathf.Min((FW - 80) / w, (FH - 190) / h), 0.7f, 1.5f);
-            _camT = -r.center * _zoomT + new Vector2(0, -50);
+            // the box and the built instruments (with room above them for a hint) fill the screen: a lone first
+            // instrument is shown big, and no empty strip is left under the box
+            var r = Rect.MinMaxRect(tl, TrayFloor(0) - 62, tr, TrayY + (TrayRows - 1) * 125f + 60);
+            foreach (var kv in O) if (StationBuilt(kv.Key)) { var sr = StationRect(kv.Key); r = Union(r, Rect.MinMaxRect(sr.xMin, sr.yMin, sr.xMax, sr.yMax + 44)); }
+            float w = r.width + 80, h = r.height + 24;
+            _zoomT = Mathf.Clamp(Mathf.Min((FW - 80) / w, (FH - 118) / h), 0.7f, 2.0f);
+            _camT = -r.center * _zoomT + new Vector2(0, -46);
             if (_camSnap) { _zoom = _zoomT; _cam = _camT; _camSnap = false; }
             else { _zoom = Mathf.Lerp(_zoom, _zoomT, dt * 2.5f); _cam = Vector2.Lerp(_cam, _camT, dt * 2.5f); }
             Content.localScale = new Vector3(_zoom, _zoom, 1);
@@ -419,7 +436,7 @@ namespace ChalkPhysics
                 if (st == "stand" ? !CircuitReady : NeedsSample(st) && _st[st].resident == null) continue;
                 run.Add(st);
             }
-            if (run.Count == 0) { Sfx.Play("nope", 0.25f); Message(new Vector2(0, TrayY + 150), "поставь образец на прибор"); return false; }
+            if (run.Count == 0) { Sfx.Play("nope", 0.25f); Message(new Vector2(TrayX, TrayY + 150), "поставь образец на прибор"); return false; }
             double n = G.AutoMult;
             int whole = Mathf.FloorToInt((float)n);
             if (Random.value < n - whole) whole++;
@@ -815,7 +832,7 @@ namespace ChalkPhysics
         {
             if (sample == null) return Act(station, NeedsSample(station) ? _st[station].resident : null);
             int i = IndexOf(sample);
-            return Drop(station, sample, i >= 0 ? SamplePos(i) : new Vector2(0, TrayY));
+            return Drop(station, sample, i >= 0 ? SamplePos(i) : new Vector2(TrayX, TrayY));
         }
 
         // ---------------- update ----------------
@@ -1211,7 +1228,7 @@ namespace ChalkPhysics
             int n = Mathf.Max(1, G.Samples.Count);
             int row = i / PerRow, inRow = Mathf.Min(PerRow, n - row * PerRow), col = i % PerRow;
             float w = i >= 0 && i < G.Samples.Count ? SampleSize(G.Samples[i]) : 42f;
-            return new Vector2((col - (inRow - 1) / 2f) * 120f, TrayFloor(row) + w / 2 + 3);
+            return new Vector2(TrayX + (col - (inRow - 1) / 2f) * 120f, TrayFloor(row) + w / 2 + 3);
         }
 
         void DrawTray()
@@ -1806,7 +1823,7 @@ namespace ChalkPhysics
                 return true;
             }
             string S(string k, string verb) => G.Automated(k) ? "выдай образец — будет работать сам" : "тяни образец: " + verb;
-            Show("tray", lesson && G.Used.Count == 0 && !_dragging, new Vector2(0, TrayY + 82), "тяни образец из коробки на прибор");
+            Show("tray", lesson && G.Used.Count == 0 && !_dragging, new Vector2(TrayX, TrayY + 110), "тяни образец из коробки на прибор");
             Show("fall", Wants("fall"), new Vector2(O["fall"].x, ShelfY + 150), S("fall", "уронить"));
             Show("dyna", Wants("dyna") && _st["dyna"].anim <= 0, O["dyna"] + new Vector2(0, 340), S("dyna", "взвесить"));
             Show("spring", Wants("spring") && _st["spring"].anim <= 0, O["spring"] + new Vector2(0, 200), S("spring", "на пружину"));

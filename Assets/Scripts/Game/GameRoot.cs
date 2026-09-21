@@ -236,7 +236,8 @@ namespace ChalkPhysics
             G.Tick(Time.deltaTime);
             _board.uvRect = new Rect(0, 0, Screen.width / 700f, Screen.height / 700f);
             // Мел stands in the corner of the map, and on the floor by the bench during a lesson
-            Buddy.I?.SetPos(G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * _apparatus.FrameScale : new Vector2(880, -40));
+            Buddy.I?.SetPos(_menu.Open ? new Vector2(420 * _apparatus.FrameScale, -150 * _apparatus.FrameScale)
+                          : G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * _apparatus.FrameScale : new Vector2(880, -40));
             _topBtns.gameObject.SetActive(!_menu.Open);
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && !_menu.Open && _dialog == null) ShowMenu();
         }

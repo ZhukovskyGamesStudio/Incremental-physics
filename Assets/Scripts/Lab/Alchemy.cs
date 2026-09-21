@@ -190,7 +190,7 @@ namespace ChalkPhysics
             var letters = G.Known.Where(id => !Defs.L(id).Derived || G.Built(Defs.L(id).derivedFrom) || need.Contains(id)).ToList();
             int n = letters.Count;
             float scale = n <= 10 ? 1f : Mathf.Max(0.6f, 1f - (n - 10) * 0.035f);
-            float step = 122 * scale, rowH = 116 * scale;
+            float step = (LetterTile.TW + 14) * scale, rowH = (LetterTile.TH + 8) * scale;
             int perRow = Mathf.Max(1, Mathf.FloorToInt(1820 / step));
             var shown = new HashSet<string>();
             for (int i = 0; i < n; i++)
@@ -377,13 +377,19 @@ namespace ChalkPhysics
             _tip.SetAsLastSibling();
             _tipTitle.text = title;
             _tipBody.text = body;
-            _tipBody.rectTransform.sizeDelta = new Vector2(430, 400);
-            float bh = Mathf.Max(28, _tipBody.preferredHeight);
-            _tipW = 460; _tipH = 58 + bh + 18;
+            const float inner = 470;
+            _tipW = inner + 30;
+            _tipTitle.rectTransform.sizeDelta = new Vector2(inner, 400);
+            _tipBody.rectTransform.sizeDelta = new Vector2(inner, 400);
+            float th = Mathf.Max(36, _tipTitle.preferredHeight);       // a long title wraps and pushes the rest down
+            float bh = string.IsNullOrEmpty(body) ? 0 : Mathf.Max(28, _tipBody.preferredHeight);
+            float top = 12 + th + 8;
+            _tipH = top + bh + 16;
             _tip.sizeDelta = new Vector2(_tipW, _tipH);
-            _tipTitle.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 10 - 19);
-            _tipBody.rectTransform.sizeDelta = new Vector2(430, bh + 4);
-            _tipBody.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 56 - bh / 2);
+            _tipTitle.rectTransform.sizeDelta = new Vector2(inner, th + 4);
+            _tipTitle.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - 12 - th / 2);
+            _tipBody.rectTransform.sizeDelta = new Vector2(inner, bh + 4);
+            _tipBody.rectTransform.anchoredPosition = new Vector2(0, _tipH / 2 - top - bh / 2);
             _tipBox.Clear();
             _tipBox.Rect(Vector2.zero, new Vector2(_tipW - 4, _tipH - 4), ChalkTex.White, 2.5f);
         }

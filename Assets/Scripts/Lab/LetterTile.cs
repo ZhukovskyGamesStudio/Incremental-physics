@@ -18,7 +18,7 @@ namespace ChalkPhysics
     /// shows its value and upgrades on click (hold = repeat). On the alchemy screen: a tile to drag onto a question mark.
     public class LetterTile : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
     {
-        public const float TW = 108, TH = 108;
+        public const float TW = 132, TH = 132;
         public string Id;
         public bool AlchemyMode;
         public float BaseScale = 1f;             // a crowded shelf makes its letters a little smaller
@@ -43,9 +43,9 @@ namespace ChalkPhysics
             rt.sizeDelta = new Vector2(TW, TH);
             UIF.Catcher(transform);
             _box = UIF.Shape(transform, id.GetHashCode() & 0xfff, "Box");
-            _sym = ChalkTex.Math(UIF.Text(transform, D.sym, 42, ChalkTex.White, new Vector2(0, alchemy ? 8 : 16), new Vector2(TW + 20, 50)));
-            _val = Fit(UIF.Text(transform, "", 19, ChalkTex.Dim, new Vector2(0, alchemy ? -24 : -12), new Vector2(TW - 14, 24)), 12, 19);
-            _cost = Fit(UIF.Text(transform, "", 20, ChalkTex.Yellow, new Vector2(0, -31), new Vector2(TW - 26, 24)), 12, 20);
+            _sym = ChalkTex.Math(UIF.Text(transform, D.sym, 48, ChalkTex.White, new Vector2(0, alchemy ? 10 : 22), new Vector2(TW + 20, 58)));
+            _val = Fit(UIF.Text(transform, "", 20, ChalkTex.Dim, new Vector2(0, alchemy ? -28 : -12), new Vector2(TW - 30, 24)), 12, 20);
+            _cost = Fit(UIF.Text(transform, "", 21, ChalkTex.Yellow, new Vector2(0, -33), new Vector2(TW - 48, 22)), 12, 21);
             if (D.openCur == Cur.Obs) { _ink = InkText.On(_cost); _cost.fontSize = Mathf.RoundToInt(18 * ChalkTex.FontScale); }
             _appear = 0;
         }
@@ -122,7 +122,12 @@ namespace ChalkPhysics
                     var c = afford ? new Color(1f, 0.84f, 0.32f, 0.95f) : new Color(1, 1, 1, 0.4f);
                     if (_hover) c.a = 1;
                     DashedCircle(_box, TW / 2 - 4, c, afford ? 3.5f : 2.5f);
-                    if (afford) DashedCircle(_box, TW / 2 - 14, new Color(c.r, c.g, c.b, 0.45f), 2f);   // ready to open
+                    if (afford)
+                        for (int i = 0; i < 12; i++)
+                        {   // ready to open: short strokes around the button, outside it, clear of every label
+                            float a = i / 12f * Mathf.PI * 2 + 0.13f; var dr = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                            _box.Line(dr * (TW / 2 + 2), dr * (TW / 2 + 9), new Color(c.r, c.g, c.b, 0.55f), 2f);
+                        }
                 }
                 else
                 {
