@@ -90,7 +90,7 @@ namespace ChalkPhysics
         {
             new LetterDef { id = "m", sym = "m", name = "средняя масса образцов", unit = "кг", baseV = 1, step = 1, cost0 = 10, costK = 2.1 },
             new LetterDef { id = "g", sym = "g", name = "гравитация", unit = "м/с²", baseV = 9.81, step = 1.15, mul = true, cost0 = 200, costK = 3.2 },
-            new LetterDef { id = "h", sym = "h", name = "высота стеллажа", unit = "м", baseV = 1, step = 1, max = 20, cost0 = 20, costK = 2.1, fmt = "0" },
+            new LetterDef { id = "h", sym = "h", name = "высота стеллажа", unit = "м", baseV = 1, step = 1, max = 20, cost0 = 20, costK = 2.1, fmt = "0", openCost = 15, openCur = Cur.Obs },
             new LetterDef { id = "F", sym = "F", name = "сила тяжести", unit = "Н", derivedFrom = "dyna", fmt = "0.#" },
             new LetterDef { id = "k", sym = "k", name = "жёсткость пружины", unit = "Н/м", baseV = 3000, step = 1000, cost0 = 400, costK = 2.3, fmt = "0", openCost = 800 },
             new LetterDef { id = "x", sym = "x", name = "сжатие пружины", unit = "м", baseV = 1, step = 0.2, max = 6, cost0 = 600, costK = 2.5, openCost = 1500 },
@@ -361,9 +361,13 @@ namespace ChalkPhysics
         static readonly string[][] TreeRaw =
         {
             // --- mechanics ---
+            // a gentle start: g and m build the dynamometer, its first ideas buy h, h builds the shelf, and only
+            // once the shelf has brought the first joules does the rest of the lab open up
             new[] { "L:g" },
-            new[] { "L:m", "L:h" },
-            new[] { "F:fall", "F:dyna" },
+            new[] { "L:m" },
+            new[] { "F:dyna" },
+            new[] { "L:h" },
+            new[] { "F:fall" },
             new[] { "L:k", "L:x" },
             new[] { "F:spring" },
             new[] { "L:l" },

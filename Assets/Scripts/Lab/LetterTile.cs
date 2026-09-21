@@ -28,6 +28,9 @@ namespace ChalkPhysics
         bool _pressed, _dragging, _hover;
         float _holdT, _repeatT, _flash, _appear;
         string _boxKey;
+        InkText _ink;
+
+        void SetCost(string s) { if (_ink != null) _ink.Set(s, new Color(_cost.color.r, _cost.color.g, _cost.color.b, 1)); else _cost.text = s; }
 
         GameState G => GameState.I;
         LetterDef D => Defs.L(Id);
@@ -43,6 +46,7 @@ namespace ChalkPhysics
             _sym = ChalkTex.Math(UIF.Text(transform, D.sym, 42, ChalkTex.White, new Vector2(0, alchemy ? 8 : 16), new Vector2(TW + 20, 50)));
             _val = Fit(UIF.Text(transform, "", 19, ChalkTex.Dim, new Vector2(0, alchemy ? -24 : -12), new Vector2(TW - 14, 24)), 12, 19);
             _cost = Fit(UIF.Text(transform, "", 20, ChalkTex.Yellow, new Vector2(0, -31), new Vector2(TW - 26, 24)), 12, 20);
+            if (D.openCur == Cur.Obs) { _ink = InkText.On(_cost); _cost.fontSize = Mathf.RoundToInt(18 * ChalkTex.FontScale); }
             _appear = 0;
         }
 
@@ -80,13 +84,13 @@ namespace ChalkPhysics
             {
                 _val.text = d.unit.Length > 0 ? "[" + d.unit + "]" : "[—]";
                 _val.color = new Color(0.45f, 0.86f, 1f, 0.8f);
-                _cost.text = "";
+                SetCost("");
             }
             else if (!open)
             {
                 afford = G.CanOpen(Id);
                 _val.text = "";
-                _cost.text = d.openCost > 0 ? GameState.FmtCur(d.openCost, d.openCur) : "открыть";
+                SetCost(d.openCost > 0 ? GameState.FmtPrice(d.openCost, d.openCur) : "открыть");
                 var yc = Apparatus.CurColor((int)d.openCur);
                 _cost.color = afford ? new Color(yc.r, yc.g, yc.b, 0.8f + 0.2f * Mathf.Sin(Time.time * 5)) : new Color(yc.r, yc.g, yc.b, 0.4f);
             }
@@ -94,13 +98,14 @@ namespace ChalkPhysics
             {
                 double cost = derived || fixedV || G.AtLimit(Id) ? -1 : G.UpgradeCost(Id);
                 afford = cost >= 0 && G.CanUpgrade(Id);
-                if (fixedV) { _val.text = "разная"; _cost.text = ""; }
-                else if (derived) { _val.text = G.LetterValue(Id); _cost.text = ""; }
-                else if (cost < 0) { _val.text = G.LetterValue(Id); _cost.text = "макс."; _cost.color = ChalkTex.Dim; }
+                if (fixedV) { _val.text = "разная"; SetCost(""); }
+                else if (derived) { _val.text = G.LetterValue(Id); SetCost(""); }
+                else if (!G.UpgradesOpen) { _val.text = G.LetterValue(Id); SetCost(""); }     // levels come with the first joules
+                else if (cost < 0) { _val.text = G.LetterValue(Id); SetCost("макс."); _cost.color = ChalkTex.Dim; }
                 else
                 {
                     _val.text = G.LetterValue(Id);
-                    _cost.text = "↑ " + GameState.Fmt(cost);
+                    SetCost("↑ " + GameState.Fmt(cost));
                     _cost.color = afford ? new Color(cc.r, cc.g, cc.b, 0.75f + 0.25f * Mathf.Sin(Time.time * 5)) : new Color(cc.r, cc.g, cc.b, 0.35f);
                 }
                 _val.color = ChalkTex.Dim;
@@ -181,7 +186,7 @@ namespace ChalkPhysics
                 FX.I.Dust(_host.Content, FixedPos, ChalkTex.Yellow, 14, 220f);
                 _host.Inspect(Id);
             }
-            else { Sfx.Play("nope", 0.4f); FX.I.Text(_host.Content, FixedPos + new Vector2(0, 70), D.openCur == Cur.Cal ? "не хватает килокалорий — проведи эксперимент" : "не хватает джоулей — проведи эксперимент", ChalkTex.Red, 24, 1.6f); }
+            else { Sfx.Play("nope", 0.4f); FX.I.Text(_host.Content, FixedPos + new Vector2(0, 70), D.openCur == Cur.Cal ? "не хватает килокалорий — проведи эксперимент" : D.openCur == Cur.Obs ? "не хватает идей — проведи эксперимент" : "не хватает джоулей — проведи эксперимент", ChalkTex.Red, 24, 1.6f); }
         }
 
         public void OnPointerDown(PointerEventData e) { _pressed = true; _dragging = false; _holdT = 0; _repeatT = 0; }

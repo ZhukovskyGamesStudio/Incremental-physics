@@ -764,7 +764,7 @@ namespace ChalkPhysics
             string head = d.unit.Length > 0 ? $"{d.sym} — {d.name}  [{d.unit}]" : $"{d.sym} — {d.name}";
             if (!G.Known.Contains(id))
             {
-                ShowTip(head, "", d.openCost > 0 ? "Открыть за " + GameState.FmtCur(d.openCost, d.openCur) : "Нажми, чтобы открыть", Apparatus.CurColor((int)d.openCur));
+                ShowTip(head, "", d.openCost > 0 ? "Открыть за " + GameState.FmtPrice(d.openCost, d.openCur) : "Нажми, чтобы открыть", Apparatus.CurColor((int)d.openCur));
                 return;
             }
             if (d.Derived)
@@ -774,6 +774,7 @@ namespace ChalkPhysics
                                         : $"Измерена в прошлой эпохе опытом «{f.title}» и записана в тетрадь");
             }
             else if (d.perSample) sb.Append("У каждого образца своя, от гладкого до шершавого. Узнаётся на столе трения.");
+            else if (!G.UpgradesOpen) sb.Append($"{G.LetterValue(id)}\nУровни величин откроются, когда появятся первые джоули");
             else if (G.AtLimit(id)) sb.Append($"{G.LetterValue(id)} — предел прибора");
             else
             {

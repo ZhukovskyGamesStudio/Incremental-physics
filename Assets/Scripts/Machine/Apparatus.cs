@@ -1859,7 +1859,7 @@ namespace ChalkPhysics
             if (burn > 0 && shown < 30) Mark(shown, new Color(1f, 0.55f, 0.3f, burn));
             // what the run has brought so far: one counter per currency, laid out from the right edge;
             // a counter gives its little jump only when its own figure changes
-            float ex = 900f;
+            float ex = 780f;                              // clear of the Esc key in the corner
             foreach (int i in new[] { (int)Cur.Obs, (int)Cur.Cal, (int)Cur.C, (int)Cur.J })
             {
                 var t = _earn[i];

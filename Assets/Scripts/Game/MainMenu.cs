@@ -12,7 +12,8 @@ namespace ChalkPhysics
         RectTransform _content, _play, _quit, _sound;
         ChalkShape _playBox, _soundIcon;
         RawImage _bg;
-        Text _soundText;
+        Text _soundText, _newText;
+        float _armed = -9;
         System.Action _onPlay;
         float _t;
 
@@ -53,14 +54,9 @@ namespace ChalkPhysics
             ChalkTex.Math(UIF.Text(_content, "T = 2π·√(l/g)", 34, new Color(1, 1, 1, 0.1f), new Vector2(660, 110), new Vector2(420, 60))).transform.localRotation = Quaternion.Euler(0, 0, -5);
             ChalkTex.Math(UIF.Text(_content, "I = U / R", 34, new Color(1, 1, 1, 0.1f), new Vector2(560, -170), new Vector2(360, 60))).transform.localRotation = Quaternion.Euler(0, 0, 4);
 
-            // the title, underlined by hand, with the demo tag pinned to its corner
-            var title = UIF.Text(_content, "Physics Incremental", 118, ChalkTex.White, new Vector2(0, 250), new Vector2(1500, 150));
-            title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            float tw = Mathf.Min(1400, title.preferredWidth);
-            var line = UIF.Shape(_content, 802, "Underline");
-            line.Line(new Vector2(-tw / 2 - 10, 172), new Vector2(tw / 2 + 20, 176), new Color(1, 1, 1, 0.75f), 4f);
-            line.Line(new Vector2(-tw / 2 + 40, 160), new Vector2(tw / 2 - 60, 163), new Color(1, 1, 1, 0.3f), 2.5f);
-            var tag = UIF.Rect("Demo", _content, new Vector2(tw / 2 + 70, 330), new Vector2(200, 76));
+            // the title is drawn, not typed (see Logo), with the demo tag pinned to its corner
+            var logo = Logo.Build(_content);
+            var tag = UIF.Rect("Demo", _content, logo.TagAt, new Vector2(200, 76));
             tag.localRotation = Quaternion.Euler(0, 0, -9);
             var tagBox = UIF.Shape(tag, 803, "Tag");
             tagBox.Rect(Vector2.zero, new Vector2(190, 68), ChalkTex.Yellow, 3.5f);
@@ -69,7 +65,7 @@ namespace ChalkPhysics
             UIF.Text(tag, "demo", 44, ChalkTex.Yellow, new Vector2(10, 2), new Vector2(180, 60));
 
             // play: big and inviting
-            _play = UIF.Rect("Play", _content, new Vector2(0, -40), new Vector2(540, 120));
+            _play = UIF.Rect("Play", _content, new Vector2(0, -30), new Vector2(540, 120));
             UIF.Catcher(_play);
             _playBox = UIF.Shape(_play, 804);
             UIF.Text(_play, "Играть", 64, ChalkTex.Yellow, new Vector2(0, 2), new Vector2(520, 100));
@@ -77,12 +73,27 @@ namespace ChalkPhysics
             pc.onClick = () => { Sfx.Play("bell", 0.6f, 1.2f); _onPlay?.Invoke(); };
             pc.onHover = h => { _play.localScale = Vector3.one * (h ? 1.06f : 1f); if (h) Sfx.Play("tick", 0.2f, 1.4f); };
 
+            // a new game: asks once more before it wipes the save
+            var ng = UIF.Rect("NewGame", _content, new Vector2(0, -170), new Vector2(380, 84));
+            UIF.Catcher(ng);
+            var nb = UIF.Shape(ng, 807);
+            nb.Rect(Vector2.zero, new Vector2(370, 76), new Color(1, 1, 1, 0.5f), 3f);
+            _newText = UIF.Text(ng, "Новая игра", 40, new Color(1, 1, 1, 0.75f), new Vector2(0, 2), new Vector2(360, 72));
+            var nc = ng.gameObject.AddComponent<Clickable>();
+            nc.onClick = () =>
+            {
+                Sfx.Play("click");
+                if (Time.unscaledTime - _armed < 3f) { GameState.DeleteSave(); GameRoot.I.Restart(false); return; }
+                _armed = Time.unscaledTime;
+            };
+            nc.onHover = h => ng.localScale = Vector3.one * (h ? 1.05f : 1f);
+
             // quit: quieter, and only where a game can close itself
-            _quit = UIF.Rect("Quit", _content, new Vector2(0, -200), new Vector2(380, 92));
+            _quit = UIF.Rect("Quit", _content, new Vector2(0, -280), new Vector2(380, 84));
             UIF.Catcher(_quit);
             var qb = UIF.Shape(_quit, 805);
-            qb.Rect(Vector2.zero, new Vector2(370, 84), new Color(1, 1, 1, 0.6f), 3f);
-            UIF.Text(_quit, "Выйти", 46, new Color(1, 1, 1, 0.8f), new Vector2(0, 2), new Vector2(360, 80));
+            qb.Rect(Vector2.zero, new Vector2(370, 76), new Color(1, 1, 1, 0.5f), 3f);
+            UIF.Text(_quit, "Выйти", 40, new Color(1, 1, 1, 0.75f), new Vector2(0, 2), new Vector2(360, 72));
             var qc = _quit.gameObject.AddComponent<Clickable>();
             qc.onClick = () => { Sfx.Play("click"); GameState.I.Save(); Application.Quit(); };
             qc.onHover = h => _quit.localScale = Vector3.one * (h ? 1.05f : 1f);
@@ -128,6 +139,7 @@ namespace ChalkPhysics
         void Update()
         {
             _t += Time.unscaledDeltaTime;
+            _newText.text = Time.unscaledTime - _armed < 3f ? "точно? ещё клик" : "Новая игра";
             _bg.uvRect = new Rect(0, 0, Screen.width / 700f, Screen.height / 700f);   // the board's grain at its usual size
             float p = 0.5f + 0.5f * Mathf.Sin(_t * 3.5f);     // the play button breathes
             _playBox.Clear();

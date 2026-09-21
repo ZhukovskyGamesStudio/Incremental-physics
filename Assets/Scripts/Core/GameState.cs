@@ -139,7 +139,7 @@ namespace ChalkPhysics
         }
 
         /// A letter of an epoch the lab has not reached cannot be levelled.
-        public bool CanUpgrade(string id) => Known.Contains(id) && !Defs.L(id).Derived && !Defs.L(id).perSample && Defs.L(id).domain <= Era && !AtLimit(id) && Cur[(int)Defs.L(id).cost] >= UpgradeCost(id);
+        public bool CanUpgrade(string id) => Known.Contains(id) && !Defs.L(id).Derived && !Defs.L(id).perSample && Defs.L(id).domain <= Era && UpgradesOpen && !AtLimit(id) && Cur[(int)Defs.L(id).cost] >= UpgradeCost(id);
 
         public bool Upgrade(string id)
         {
@@ -438,9 +438,14 @@ namespace ChalkPhysics
         /// A formula's branch of upgrades starts growing once the player has been to a lesson with the formula.
         public bool ChainOpen(string key)
         {
+            if (!UpgradesOpen) return false;
             if (key.StartsWith("L:")) return Known.Contains(key.Substring(2)) && Lessons > 0;
             return Built(key) && Lessons > (BuiltAt.TryGetValue(key, out var l) ? l : 0);
         }
+
+        /// Nothing to upgrade yet: devices, perks and letter levels all wait for the very first joules (from the shelf),
+        /// so a new player meets one thing at a time.
+        public bool UpgradesOpen => Total[(int)ChalkPhysics.Cur.J] > 0 || Revolutions > 0;
 
         // ---------------- letters: opened for joules ----------------
         public bool CanOpen(string id)

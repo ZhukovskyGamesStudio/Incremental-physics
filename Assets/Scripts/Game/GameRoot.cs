@@ -36,7 +36,7 @@ namespace ChalkPhysics
         Canvas _canvas;
         RectTransform _root, _world, _labRt, _alchemyRt, _machineRt, _topBtns;
         RawImage _board;
-        Text _sound, _newGame;
+
         GameObject _dialog;
         Apparatus _apparatus;
         Lab _lab;
@@ -45,7 +45,7 @@ namespace ChalkPhysics
         static bool _booted;                          // the splash and the menu greet a fresh start, not a "new game"
         BreakScreen _breakScreen = BreakScreen.Map;
         bool _ending, _dontSave;
-        float _newGameArm;
+
 
         void Awake()
         {
@@ -100,13 +100,11 @@ namespace ChalkPhysics
             G.RevolutionDone += d => buddy.React(Buddy.Mood.Joy, 4f);
             G.Changed += buddy.Poke;
 
-            _topBtns = UIF.Rect("Top", _root, Vector2.zero, new Vector2(200, 80));
+            // one drawn key in the corner: Esc, which opens the menu (sound, a new game and the way out live there)
+            _topBtns = UIF.Rect("Top", _root, Vector2.zero, new Vector2(104, 72));
             _topBtns.anchorMin = _topBtns.anchorMax = new Vector2(1, 1);
-            _topBtns.anchoredPosition = new Vector2(-120, -40);
-            _sound = SmallButton(_topBtns, new Vector2(0, 14), () => { Sfx.Muted = !Sfx.Muted; Sfx.Play("click"); G.Save(); });
-            _newGame = SmallButton(_topBtns, new Vector2(0, -14), NewGameClick);
-            // back to the main menu (Esc does the same); the way out of the game lives there
-            SmallButton(_topBtns, new Vector2(0, -42), () => { Sfx.Play("click"); ShowMenu(); }).text = "меню";
+            _topBtns.anchoredPosition = new Vector2(-72, -52);
+            EscKey(_topBtns);
             _menu = MainMenu.Build(_world, PlayFromMenu);
 
             G.FormulaProven += id => { if (Defs.F(id).kind == FKind.Final) StartCoroutine(Ending(false)); };
@@ -205,22 +203,31 @@ namespace ChalkPhysics
 
         void SetVeil(float a) { var c = _veil.color; c.a = a; _veil.color = c; }
 
-        Text SmallButton(RectTransform parent, Vector2 pos, System.Action onClick)
+        /// A keyboard key drawn in chalk: its cap, a lower lip for depth, and "Esc" on it. It sinks when pressed.
+        void EscKey(RectTransform rt)
         {
-            var rt = UIF.Rect("Btn", parent, pos, new Vector2(200, 28));
             UIF.Catcher(rt);
-            var t = UIF.Text(rt, "", 18, ChalkTex.Dim, Vector2.zero, new Vector2(200, 28), TextAnchor.MiddleRight);
+            var face = UIF.Rect("Face", rt, Vector2.zero, new Vector2(104, 72));
+            var s = UIF.Shape(face, 830);
+            var W = new Color(1, 1, 1, 0.8f);
+            s.Rect(new Vector2(0, -4), new Vector2(92, 58), new Color(1, 1, 1, 0.35f), 2.5f);   // the key's body, seen below the cap
+            s.Rect(new Vector2(0, 4), new Vector2(92, 56), W, 3f);
+            s.Line(new Vector2(-46, -24), new Vector2(-42, -32), new Color(1, 1, 1, 0.35f), 2f);
+            s.Line(new Vector2(46, -24), new Vector2(42, -32), new Color(1, 1, 1, 0.35f), 2f);
+            ChalkTex.Math(UIF.Text(face, "Esc", 30, W, new Vector2(0, 5), new Vector2(90, 44)));
             var c = rt.gameObject.AddComponent<Clickable>();
-            c.onClick = onClick;
-            c.onHover = h => t.color = h ? ChalkTex.Cyan : ChalkTex.Dim;
-            return t;
+            c.onClick = () => { Sfx.Play("click"); ShowMenu(); };
+            c.onHover = h => face.localScale = Vector3.one * (h ? 1.07f : 1f);
+            var press = rt.gameObject.AddComponent<KeyPress>();
+            press.face = face;
         }
 
-        void NewGameClick()
+        /// The key goes down a little under the finger.
+        class KeyPress : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         {
-            Sfx.Play("click");
-            if (Time.unscaledTime - _newGameArm < 3f) { GameState.DeleteSave(); Restart(false); return; }
-            _newGameArm = Time.unscaledTime;
+            public RectTransform face;
+            public void OnPointerDown(PointerEventData e) => face.anchoredPosition = new Vector2(0, -5);
+            public void OnPointerUp(PointerEventData e) => face.anchoredPosition = Vector2.zero;
         }
 
         void Update()
@@ -230,9 +237,7 @@ namespace ChalkPhysics
             _board.uvRect = new Rect(0, 0, Screen.width / 700f, Screen.height / 700f);
             // Мел stands in the corner of the map, and on the floor by the bench during a lesson
             Buddy.I?.SetPos(G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * _apparatus.FrameScale : new Vector2(880, -40));
-            _sound.text = Sfx.Muted ? "звук: выкл" : "звук: вкл";
-            _topBtns.gameObject.SetActive(!_menu.Open);   // the menu has its own sound switch
-            _newGame.text = Time.unscaledTime - _newGameArm < 3f ? "точно? ещё клик" : "новая игра";
+            _topBtns.gameObject.SetActive(!_menu.Open);
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && !_menu.Open && _dialog == null) ShowMenu();
         }
 
