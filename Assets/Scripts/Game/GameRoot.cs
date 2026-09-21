@@ -235,9 +235,12 @@ namespace ChalkPhysics
             GameState.DevSpeed = devSpeed;
             G.Tick(Time.deltaTime);
             _board.uvRect = new Rect(0, 0, Screen.width / 700f, Screen.height / 700f);
-            // Мел stands in the corner of the map, and on the floor by the bench during a lesson
-            Buddy.I?.SetPos(_menu.Open ? new Vector2(420 * _apparatus.FrameScale, -150 * _apparatus.FrameScale)
-                          : G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * _apparatus.FrameScale : new Vector2(880, -40));
+            ScreenMode.Tick();
+            // Мел stands in the corner of the map, and on the floor by the bench during a lesson. In the menu he stands
+            // just clear of the buttons: the menu shrinks on a narrow screen and he does not, so his own gap is not scaled
+            float fs = _apparatus.FrameScale, half = _root.rect.width / 2;
+            Buddy.I?.SetPos(_menu.Open ? new Vector2(300 * fs + 110, -150 * fs)
+                          : G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * fs : new Vector2(Mathf.Min(880, half - 90), -40));
             _topBtns.gameObject.SetActive(!_menu.Open);
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && !_menu.Open && _dialog == null) ShowMenu();
         }

@@ -9,10 +9,11 @@ namespace ChalkPhysics
     public class MainMenu : MonoBehaviour
     {
         const float W = 1920, H = 1080;
-        RectTransform _content, _play, _quit, _sound;
-        ChalkShape _playBox, _soundIcon;
+        RectTransform _content, _play, _quit, _sound, _full;
+        ChalkShape _playBox, _soundIcon, _fullIcon;
         RawImage _bg;
-        Text _soundText, _newText;
+        Text _soundText, _newText, _fullText;
+        int _fullShown = -1;
         float _armed = -9;
         System.Action _onPlay;
         float _t;
@@ -110,6 +111,17 @@ namespace ChalkPhysics
             sc.onHover = h => _sound.localScale = Vector3.one * (h ? 1.06f : 1f);
             DrawSound();
 
+            // full screen, next to the sound: in a browser the game fills the whole screen by itself (a site's own
+            // full-screen button only centres the embed at its page size, with black bars around it)
+            _full = UIF.Rect("Fullscreen", _content, new Vector2(-470, -440), new Vector2(340, 90));
+            UIF.Catcher(_full);
+            _fullIcon = UIF.Shape(_full, 808);
+            _fullIcon.rectTransform.anchoredPosition = new Vector2(-130, 0);
+            _fullText = UIF.Text(_full, "", 34, ChalkTex.White, new Vector2(38, 0), new Vector2(250, 60), TextAnchor.MiddleLeft);
+            var fc = _full.gameObject.AddComponent<Clickable>();
+            fc.onClick = () => { Sfx.Play("click"); ScreenMode.Click(); };
+            fc.onHover = h => _full.localScale = Vector3.one * (h ? 1.06f : 1f);
+
             UIF.Text(_content, "Zhukovsky Games", 26, new Color(1, 1, 1, 0.35f), new Vector2(720, -480), new Vector2(360, 40), TextAnchor.MiddleRight);
         }
 
@@ -133,13 +145,29 @@ namespace ChalkPhysics
             _soundText.color = Sfx.Muted ? new Color(1, 1, 1, 0.55f) : ChalkTex.White;
         }
 
-        public void Show() { gameObject.SetActive(true); transform.SetAsLastSibling(); DrawSound(); }
-        public void Hide() { gameObject.SetActive(false); }
+        /// Four corners of a screen: pointing out to go full screen, pointing in to come back to a window.
+        void DrawFull(bool on)
+        {
+            var s = _fullIcon; s.Clear();
+            var c = ChalkTex.White;
+            foreach (var (sx, sy) in new[] { (1, 1), (-1, 1), (1, -1), (-1, -1) })
+            {
+                if (!on) s.Poly(new[] { new Vector2(22 * sx, 6 * sy), new Vector2(22 * sx, 16 * sy), new Vector2(10 * sx, 16 * sy) }, c, 3f, false);
+                else s.Poly(new[] { new Vector2(20 * sx, 7 * sy), new Vector2(9 * sx, 7 * sy), new Vector2(9 * sx, 16 * sy) }, c, 3f, false);
+            }
+            _fullText.text = on ? "в окне" : "на весь экран";
+        }
+
+        public void Show() { gameObject.SetActive(true); transform.SetAsLastSibling(); DrawSound(); _fullShown = -1; }
+        public void Hide() { gameObject.SetActive(false); ScreenMode.Area(null); }
 
         void Update()
         {
             _t += Time.unscaledDeltaTime;
             _newText.text = Time.unscaledTime - _armed < 3f ? "точно? ещё клик" : "Новая игра";
+            int full = ScreenMode.On ? 1 : 0;
+            if (full != _fullShown) { _fullShown = full; DrawFull(full == 1); }
+            ScreenMode.Area(_full);
             _bg.uvRect = new Rect(0, 0, Screen.width / 700f, Screen.height / 700f);   // the board's grain at its usual size
             float p = 0.5f + 0.5f * Mathf.Sin(_t * 3.5f);     // the play button breathes
             _playBox.Clear();

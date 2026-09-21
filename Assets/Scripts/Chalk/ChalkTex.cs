@@ -87,50 +87,36 @@ namespace ChalkPhysics
             return Mathf.PerlinNoise(off + r * Mathf.Cos(a) + r * Mathf.Sin(b) * 0.37f, off + r * Mathf.Sin(a) + r * Mathf.Cos(b) * 0.61f);
         }
 
-        /// A browser has no system fonts: the web build carries its own chalk hand, Amatic SC (SIL OFL, see the
-        /// licence beside it), with Liberation Sans behind it for Greek letters and arrows. It is narrow, so it is set larger.
+        /// A browser has no system fonts: the web build carries its own hand, Pangolin (SIL OFL, see the licence
+        /// beside it), close to Ink Free in width and with real lower case (g is not G, t is not T). Its import settings
+        /// fall back on Liberation Sans (SIL OFL) for what it lacks: Greek letters, arrows, ►.
 #if UNITY_WEBGL && !UNITY_EDITOR
         public static readonly bool WebFont = true;
+#elif UNITY_EDITOR
+        // dev: an empty file Temp/webfont.flag previews the browser's font in the editor
+        public static readonly bool WebFont = System.IO.File.Exists("Temp/webfont.flag");
 #else
         public static readonly bool WebFont = false;
 #endif
-        public static float FontScale => WebFont ? 1.22f : 1f;
+        public static float FontScale => 1f;
 
         public static Font Font
         {
             get
             {
                 if (_font != null) return _font;
-                if (WebFont) _font = Resources.Load<Font>("Fonts/AmaticSC-Bold");
+                if (WebFont) _font = Resources.Load<Font>("Fonts/Pangolin-Regular");
                 if (_font == null) _font = Font.CreateDynamicFontFromOSFont(new[] { "Ink Free", "Segoe Print", "Comic Sans MS", "Arial" }, 32);
                 if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 return _font;
             }
         }
 
-        static Font _math;
-        /// Symbols of quantities and formulas. The web font is small caps (its g looks like G, its t like T — and T is
-        /// the period here), so in the browser they are set in Liberation Sans (SIL OFL) instead.
-        public static Font MathFont
-        {
-            get
-            {
-                if (!WebFont) return Font;
-                if (_math == null) _math = Resources.Load<Font>("Fonts/LiberationSans");
-                return _math != null ? _math : Font;
-            }
-        }
+        /// Symbols of quantities and formulas: the same hand as everything else, on every platform.
+        public static Font MathFont => Font;
 
-        /// Sets a label in the formula font, at the size it was designed for (the web hand is enlarged, this one is not).
-        public static Text Math(Text t)
-        {
-            if (!WebFont || t == null) return t;
-            t.font = MathFont;
-            t.fontSize = Mathf.RoundToInt(t.fontSize / FontScale);
-            t.resizeTextMinSize = Mathf.RoundToInt(t.resizeTextMinSize / FontScale);
-            t.resizeTextMaxSize = Mathf.RoundToInt(t.resizeTextMaxSize / FontScale);
-            return t;
-        }
+        /// Marks a label that shows symbols or a formula (kept as the one place to give them a font of their own).
+        public static Text Math(Text t) => t;
 
         /// The few pictograms the web font has no glyph for: swapped for ones it has, or left out.
         public static string Sym(string s)

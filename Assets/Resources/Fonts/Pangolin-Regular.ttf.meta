@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cf7d6b500839eaa49abd3e0099c34b43
+guid: 0af4ffa7f3147314b8335677c48a3e02
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,8 +9,10 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Amatic SC
-  fallbackFontReferences: []
+  - Pangolin
+  - Liberation Sans
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 30255c72b8566df4599a675a0d8672b7, type: 3}
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1

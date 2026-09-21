@@ -21,14 +21,12 @@ namespace ChalkPhysics
             var f = ChalkTex.Font;
             if (f == null) return;
             foreach (int size in new[] { 10, 13, 16, 20, 24, 28, 34, 40, 48, 60 }) f.RequestCharactersInTexture(Chars, size, FontStyle.Normal);
-            var m = ChalkTex.MathFont;
-            if (m != null && m != f) foreach (int size in new[] { 10, 14, 18, 24, 30, 40, 50 }) m.RequestCharactersInTexture(Chars, size, FontStyle.Normal);
             Font.textureRebuilt += w.OnRebuilt;
         }
 
         void OnDestroy() { Font.textureRebuilt -= OnRebuilt; }
 
-        void OnRebuilt(Font f) { if (f == ChalkTex.Font || f == ChalkTex.MathFont) _dirty = true; }
+        void OnRebuilt(Font f) { _dirty = true; }        // the hand or the font behind it
 
         void LateUpdate()
         {
