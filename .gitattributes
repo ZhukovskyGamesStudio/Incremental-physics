@@ -169,3 +169,8 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# Git LFS is disabled on the GitHub repository: these formats are stored in git directly
+*.png                   -filter -diff -merge -text
+*.ttf                   -filter -diff -merge -text
+*.wav                   -filter -diff -merge -text

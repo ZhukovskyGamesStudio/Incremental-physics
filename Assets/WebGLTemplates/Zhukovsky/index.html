@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #2A324B; }
+      #unity-canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; display: block; background: #2A324B; outline: none; }
+      #loader { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                gap: 38px; background: #2A324B; transition: opacity .45s ease; font-family: sans-serif; }
+      #loader svg { width: min(36vw, 320px); height: auto; }
+      #bar { width: min(40vw, 360px); height: 6px; border-radius: 3px; background: rgba(255, 246, 234, .14); overflow: hidden; }
+      #fill { width: 0; height: 100%; border-radius: 3px; background: #FF8A3D; transition: width .25s ease; }
+      #fail { display: none; color: #FFF6EA; opacity: .8; font-size: 16px; max-width: 80vw; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="loader">
+      <svg viewBox="-112 -32 224 56" aria-label="Zhukovsky Games">
+        <path d="M 100.7,5.3 L 100.4,5.2 L 99.9,5.1 L 99.3,5.1 L 98.7,4.9 L 97.9,4.8 L 97.0,4.6 L 96.0,4.5 L 94.9,4.2 L 93.7,4.0 L 92.4,3.8 L 91.0,3.5 L 89.5,3.2 L 87.9,2.9 L 86.2,2.5 L 84.4,2.2 L 82.6,1.8 L 80.7,1.4 L 78.7,1.0 L 76.6,0.6 L 74.5,0.2 L 72.3,-0.3 L 70.0,-0.8 L 67.7,-1.2 L 65.3,-1.7 L 62.8,-2.2 L 60.3,-2.7 L 57.8,-3.2 L 55.2,-3.7 L 52.5,-4.2 L 49.8,-4.7 L 47.1,-5.2 L 44.4,-5.7 L 41.6,-6.2 L 38.8,-6.7 L 35.9,-7.2 L 33.0,-7.7 L 30.1,-8.1 L 27.2,-8.6 L 24.3,-9.0 L 21.4,-9.5 L 18.4,-9.9 L 15.4,-10.3 L 12.5,-10.7 L 9.5,-11.0 L 6.5,-11.4 L 3.5,-11.7 L 0.5,-12.0 L -2.4,-12.3 L -5.4,-12.5 L -8.3,-12.8 L -11.3,-13.0 L -14.2,-13.2 L -17.1,-13.3 L -20.0,-13.5 L -22.9,-13.6 L -25.7,-13.6 L -28.5,-13.7 L -31.3,-13.7 L -34.1,-13.7 L -36.8,-13.7 L -39.5,-13.6 L -42.2,-13.6 L -44.8,-13.5 L -47.4,-13.3 L -49.9,-13.2 L -52.4,-13.0 L -54.9,-12.8 L -57.3,-12.5 L -59.6,-12.3 L -61.9,-12.0 L -64.2,-11.7 L -66.4,-11.3 L -68.5,-11.0 L -70.6,-10.6 L -72.7,-10.2 L -74.6,-9.7 L -76.6,-9.3 L -78.4,-8.8 L -80.2,-8.4 L -81.9,-7.9 L -83.6,-7.3 L -85.1,-6.8 L -86.7,-6.3 L -88.1,-5.7 L -89.5,-5.1 L -90.8,-4.6 L -92.0,-4.0 L -93.2,-3.4 L -94.2,-2.8 L -95.2,-2.2 L -96.2,-1.5 L -97.0,-0.9 L -97.8,-0.3 L -98.5,0.3 L -99.1,0.9 L -99.6,1.6 L -100.0,2.2 L -100.4,2.8 L -100.7,3.4 L -100.9,4.0 L -101.0,4.6 L -101.0,5.2 L -100.9,5.7 L -100.8,6.3 L -100.6,6.8 L -100.2,7.4 L -99.8,7.9 L -99.4,8.4 L -98.8,8.9 L -98.1,9.3 L -97.4,9.8 L -96.6,10.2 L -95.7,10.6 L -94.7,11.0 L -93.6,11.3 L -92.4,11.7 L -91.2,12.0 L -89.8,12.3 L -88.4,12.5 L -86.9,12.8 L -85.3,13.0 L -83.7,13.2 L -81.9,13.3 L -80.1,13.5 L -78.2,13.6 L -76.3,13.6 L -74.2,13.7 L -72.1,13.7 L -69.9,13.7 L -67.6,13.7 L -65.3,13.7 L -62.8,13.6 L -60.4,13.5 L -57.8,13.4 L -55.2,13.2 L -52.5,13.1 L -49.8,12.9 L -47.0,12.7 L -44.1,12.4 L -41.2,12.2 L -38.2,11.9 L -35.2,11.7 L -32.2,11.4 L -29.0,11.1 L -25.9,10.8 L -22.7,10.4 L -19.5,10.1 L -16.2,9.8 L -12.9,9.4 L -9.6,9.1 L -6.3,8.8 L -2.9,8.4 L 0.5,8.1 L 3.9,7.7 L 7.3,7.4 L 10.7,7.1 L 14.1,6.8 L 17.5,6.5 L 20.9,6.2 L 24.2,5.9 L 27.6,5.6 L 30.9,5.4 L 34.3,5.1 L 37.5,4.9 L 40.8,4.7 L 44.0,4.5 L 47.1,4.4 L 50.2,4.2 L 53.3,4.1 L 56.3,4.0 L 59.2,3.9 L 62.1,3.9 L 64.8,3.8 L 67.6,3.8 L 70.2,3.8 L 72.7,3.8 L 75.2,3.8 L 77.5,3.8 L 79.8,3.9 L 81.9,3.9 L 84.0,4.0 L 85.9,4.1 L 87.8,4.2 L 89.5,4.3 L 91.1,4.4 L 92.6,4.5 L 94.0,4.6 L 95.2,4.7 L 96.3,4.8 L 97.4,4.9 L 98.2,5.0 L 99.0,5.1 L 99.6,5.1 L 100.2,5.2 L 100.6,5.3 L 100.8,5.3 L 101.0,5.3 L 101.0,5.3 L 100.9,5.3 Z" fill="#FF8A3D"/>
+        <ellipse cx="-24" cy="-8" rx="14" ry="14" fill="#2A324B"/>
+        <circle cx="-21" cy="-11" r="6" fill="#FF8A3D"/>
+      </svg>
+      <div id="bar"><div id="fill"></div></div>
+      <div id="fail"></div>
+    </div>
+    <script src="Build/{{{ LOADER_FILENAME }}}"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var loader = document.querySelector("#loader");
+      var fill = document.querySelector("#fill");
+      createUnityInstance(canvas, {
+        arguments: [],
+#if PROGRESSIVE_ASSET_LOADING
+        primaryDataUrls: {{{ JSON.stringify(PRIMARY_DATA_FILES) }}},
+        secondaryDataUrls: {{{ JSON.stringify(SECONDARY_DATA_FILES) }}},
+#else
+        dataUrl: "Build/{{{ DATA_FILENAME }}}",
+#endif
+        frameworkUrl: "Build/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+        codeUrl: "Build/{{{ CODE_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: "Build/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+      }, function (progress) {
+        fill.style.width = Math.round(100 * progress) + "%";
+      }).then(function (unityInstance) {
+        fill.style.width = "100%";
+        loader.style.opacity = "0";
+        setTimeout(function () { loader.remove(); }, 500);
+        canvas.focus();
+      }).catch(function (message) {
+        var f = document.querySelector("#fail");
+        f.textContent = message;
+        f.style.display = "block";
+      });
+    </script>
+  </body>
+</html>
