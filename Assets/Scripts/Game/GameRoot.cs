@@ -41,6 +41,8 @@ namespace ChalkPhysics
         Apparatus _apparatus;
         Lab _lab;
         Alchemy _alchemy;
+        MainMenu _menu;
+        static bool _booted;                          // the splash and the menu greet a fresh start, not a "new game"
         BreakScreen _breakScreen = BreakScreen.Map;
         bool _ending, _dontSave;
         float _newGameArm;
@@ -103,16 +105,33 @@ namespace ChalkPhysics
             _topBtns.anchoredPosition = new Vector2(-120, -40);
             _sound = SmallButton(_topBtns, new Vector2(0, 14), () => { Sfx.Muted = !Sfx.Muted; Sfx.Play("click"); G.Save(); });
             _newGame = SmallButton(_topBtns, new Vector2(0, -14), NewGameClick);
-            // a full-screen build needs a way out (Esc works too); the editor has its own
-            if (!Application.isEditor && Application.platform != RuntimePlatform.WebGLPlayer) SmallButton(_topBtns, new Vector2(0, -42), () => { Sfx.Play("click"); Application.Quit(); }).text = "выход";
+            // back to the main menu (Esc does the same); the way out of the game lives there
+            SmallButton(_topBtns, new Vector2(0, -42), () => { Sfx.Play("click"); ShowMenu(); }).text = "меню";
+            _menu = MainMenu.Build(_world, PlayFromMenu);
 
             G.FormulaProven += id => { if (Defs.F(id).kind == FKind.Final) StartCoroutine(Ending(false)); };
             G.LessonEnded += OnBell;
             ApplyPhase();
             if (G.Won) StartCoroutine(Ending(true));
+            if (autoPlayBot || _booted) _menu.Hide();
             if (autoPlayBot) gameObject.AddComponent<AutoPlayBot>();
-            else Splash.Show(_root, null);           // the studio's mark first (a click or a key skips it)
+            else if (!_booted) Splash.Show(_root, null);   // the studio's mark first, then the menu under it
+            _booted = true;
             Time.timeScale = timeScale;
+        }
+
+        /// The main menu over whatever screen the game is on; "Играть" lifts it with the usual curtain.
+        public void ShowMenu()
+        {
+            if (_switching || _menu.Open) return;
+            Sfx.Play("whoosh", 0.25f, 0.9f);
+            StartCoroutine(Switch(() => _menu.Show()));
+        }
+
+        void PlayFromMenu()
+        {
+            if (_switching || !_menu.Open) return;
+            StartCoroutine(Switch(() => { _menu.Hide(); if (G.Phase != Phase.Lesson) _lab.FocusFrontier(); }));
         }
 
         void ApplyPhase()
@@ -212,8 +231,9 @@ namespace ChalkPhysics
             // Мел stands in the corner of the map, and on the floor by the bench during a lesson
             Buddy.I?.SetPos(G.Phase == Phase.Lesson ? _apparatus.BuddyAnchor * _apparatus.FrameScale : new Vector2(880, -40));
             _sound.text = Sfx.Muted ? "звук: выкл" : "звук: вкл";
+            _topBtns.gameObject.SetActive(!_menu.Open);   // the menu has its own sound switch
             _newGame.text = Time.unscaledTime - _newGameArm < 3f ? "точно? ещё клик" : "новая игра";
-            if (!Application.isEditor && Application.platform != RuntimePlatform.WebGLPlayer && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) Application.Quit();
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && !_menu.Open && _dialog == null) ShowMenu();
         }
 
         void OnApplicationQuit() { if (!_dontSave) G.Save(); }
