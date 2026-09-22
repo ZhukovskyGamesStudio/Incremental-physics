@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 30255c72b8566df4599a675a0d8672b7
+guid: b05685c291d04c3181aa3382acc7695e
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Liberation Sans
+  - Melok
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

@@ -523,7 +523,7 @@ namespace ChalkPhysics
                 float p = 0.5f + 0.5f * Mathf.Sin(Time.time * 4);
                 _startBox.Clear();
                 _startBox.Rect(Vector2.zero, new Vector2(392 + p * 8, 76 + p * 4), ChalkTex.Yellow, 4f);
-                _startText.text = ChalkTex.Sym($"▶ Эксперимент {G.Lessons + 1}  ({G.MaxActions} действий)");
+                _startText.text = $"▶ Эксперимент {G.Lessons + 1}  ({G.MaxActions} действий)";
             }
 
             if (_reveal != null)

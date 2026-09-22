@@ -28,8 +28,7 @@ namespace ChalkPhysics
             ink._t = t;
             t.supportRichText = true;
             t.resizeTextForBestFit = false;
-            // one line, never shrunk: a line taller than its box (a glyph from a fallback font, like the ↑ Ink Free
-            // lacks, brings a taller line) would otherwise not be drawn at all
+            // one line, never shrunk: a line taller than its box would otherwise not be drawn at all
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
             ink._s = UIF.Shape(t.transform, 5, "Bulbs");
@@ -42,7 +41,7 @@ namespace ChalkPhysics
         {
             if (raw == _raw && bulb == _bulb) return;
             _raw = raw ?? ""; _bulb = bulb;
-            _t.text = ChalkTex.Sym(_raw).Replace(GameState.Bulb, Gap);
+            _t.text = _raw.Replace(GameState.Bulb, Gap);
             _dirty = true;
             Layout();
         }

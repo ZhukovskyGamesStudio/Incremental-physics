@@ -6,7 +6,8 @@ namespace ChalkPhysics
     /// Procedurally generated chalk textures, so all art can be made from code in the same style.
     public static class ChalkTex
     {
-        static Texture2D _stroke, _board;
+        static Texture2D _stroke, _board, _grain;
+        static Material _textMat;
         static Font _font;
 
         public static readonly Color White = new Color(0.93f, 0.93f, 0.89f, 0.95f);
@@ -87,17 +88,8 @@ namespace ChalkPhysics
             return Mathf.PerlinNoise(off + r * Mathf.Cos(a) + r * Mathf.Sin(b) * 0.37f, off + r * Mathf.Sin(a) + r * Mathf.Cos(b) * 0.61f);
         }
 
-        /// A browser has no system fonts: the web build carries its own hand, Pangolin (SIL OFL, see the licence
-        /// beside it), close to Ink Free in width and with real lower case (g is not G, t is not T). Its import settings
-        /// fall back on Liberation Sans (SIL OFL) for what it lacks: Greek letters, arrows, ►.
-#if UNITY_WEBGL && !UNITY_EDITOR
-        public static readonly bool WebFont = true;
-#elif UNITY_EDITOR
-        // dev: an empty file Temp/webfont.flag previews the browser's font in the editor
-        public static readonly bool WebFont = System.IO.File.Exists("Temp/webfont.flag");
-#else
-        public static readonly bool WebFont = false;
-#endif
+        /// The game's own hand, Melok: drawn for this game (Tools/MelokFont builds it), the same on every platform,
+        /// with Russian, English, Greek, the math signs and the pictograms (▶ ★ ⚗ ⚙ ✓) all in one file.
         public static float FontScale => 1f;
 
         public static Font Font
@@ -105,10 +97,60 @@ namespace ChalkPhysics
             get
             {
                 if (_font != null) return _font;
-                if (WebFont) _font = Resources.Load<Font>("Fonts/Pangolin-Regular");
-                if (_font == null) _font = Font.CreateDynamicFontFromOSFont(new[] { "Ink Free", "Segoe Print", "Comic Sans MS", "Arial" }, 32);
+                _font = Resources.Load<Font>("Fonts/Melok-Regular");
                 if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 return _font;
+            }
+        }
+
+        /// Grain for chalk text, tileable: R is dust (a speck per pixel), G the same noise smoothed, where the edge wanders.
+        public static Texture2D Grain
+        {
+            get
+            {
+                if (_grain != null) return _grain;
+                const int s = 128;
+                var rnd = new System.Random(11);
+                var dust = new float[s * s];
+                for (int i = 0; i < dust.Length; i++) dust[i] = (float)rnd.NextDouble();
+                var edge = dust;
+                for (int pass = 0; pass < 2; pass++)                  // box blur on the torus, twice
+                {
+                    var b = new float[s * s];
+                    for (int y = 0; y < s; y++)
+                    for (int x = 0; x < s; x++)
+                    {
+                        float sum = 0;
+                        for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++) sum += edge[((y + dy + s) % s) * s + (x + dx + s) % s];
+                        b[y * s + x] = sum / 9f;
+                    }
+                    edge = b;
+                }
+                float lo = 1, hi = 0;
+                foreach (var v in edge) { lo = Mathf.Min(lo, v); hi = Mathf.Max(hi, v); }
+                var px = new Color32[s * s];
+                for (int i = 0; i < px.Length; i++)
+                    px[i] = new Color32((byte)(dust[i] * 255), (byte)(Mathf.InverseLerp(lo, hi, edge[i]) * 255), 0, 255);
+                var t = new Texture2D(s, s, TextureFormat.RGBA32, false, true) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear, name = "ChalkGrain" };
+                t.SetPixels32(px);
+                t.Apply();
+                _grain = t;
+                return t;
+            }
+        }
+
+        /// Text written in chalk (Resources/Shaders/ChalkText): a ragged edge and dust specks instead of a smooth outline.
+        public static Material TextMaterial
+        {
+            get
+            {
+                if (_textMat != null) return _textMat;
+                var sh = Resources.Load<Shader>("Shaders/ChalkText");
+                if (sh == null || !sh.isSupported) return null;
+                _textMat = new Material(sh) { name = "ChalkText" };
+                _textMat.SetTexture("_GrainTex", Grain);
+                return _textMat;
             }
         }
 
@@ -117,12 +159,5 @@ namespace ChalkPhysics
 
         /// Marks a label that shows symbols or a formula (kept as the one place to give them a font of their own).
         public static Text Math(Text t) => t;
-
-        /// The few pictograms the web font has no glyph for: swapped for ones it has, or left out.
-        public static string Sym(string s)
-        {
-            if (!WebFont || string.IsNullOrEmpty(s)) return s;
-            return s.Replace("▶", "►").Replace("✓", "√").Replace("⚗ ", "").Replace("⚙ ", "").Replace("★ ", "").Replace("⚗", "").Replace("⚙", "").Replace("★", "");
-        }
     }
 }

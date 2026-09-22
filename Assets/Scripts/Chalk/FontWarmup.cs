@@ -3,20 +3,19 @@ using UnityEngine.UI;
 
 namespace ChalkPhysics
 {
-    /// The web build draws its text with a font file of its own, whose glyph atlas grows as bigger letters are asked
-    /// for. The letters are rasterised up front, and whenever the atlas is rebuilt anyway every label is redrawn on the
+    /// The game draws its text with a font file of its own, whose glyph atlas grows as bigger letters are asked for.
+    /// The letters are rasterised up front, and whenever the atlas is rebuilt anyway every label is redrawn on the
     /// next frame, so no text is left blank by a rebuild that happened while it was being laid out.
     public class FontWarmup : MonoBehaviour
     {
         const string Chars = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя" +
                              "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" +
-                             " .,:;!?%()[]{}+-×·²³½≈→↑←►√«»—–/\\\"'<>=_μρωηλΔΨ";
+                             " .,:;!?%()[]{}+-−×·²³½¼°≈→↑←▶►√✓★⚗⚙«»‹›…—–/\\\"'<>=_μρωηλπΔΨ";
         bool _dirty;
         int _frames;
 
         public static void Attach(GameObject host)
         {
-            if (!ChalkTex.WebFont) return;
             var w = host.AddComponent<FontWarmup>();
             var f = ChalkTex.Font;
             if (f == null) return;

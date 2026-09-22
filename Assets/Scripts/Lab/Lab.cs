@@ -718,7 +718,7 @@ namespace ChalkPhysics
             _tipOn = true;
             _tip.gameObject.SetActive(true);
             _tip.SetAsLastSibling();
-            _tipTitle.text = ChalkTex.Sym(title);
+            _tipTitle.text = title;
             _tipBody.text = body ?? "";
             const float inner = 470;
             _tipW = inner + 30;
@@ -889,7 +889,7 @@ namespace ChalkPhysics
                 float p = 0.5f + 0.5f * Mathf.Sin(Time.time * 4);
                 _startBox.Clear();
                 _startBox.Rect(Vector2.zero, new Vector2(392 + p * 8, 76 + p * 4), ChalkTex.Yellow, 4f);
-                _startText.text = ChalkTex.Sym($"▶ Эксперимент {G.Lessons + 1}  ({G.MaxActions} действий)");
+                _startText.text = $"▶ Эксперимент {G.Lessons + 1}  ({G.MaxActions} действий)";
             }
 
             _alchShake = Mathf.Max(0, _alchShake - Time.deltaTime * 3);
@@ -901,7 +901,7 @@ namespace ChalkPhysics
                 _alchBtn.anchoredPosition = new Vector2(-720 + Mathf.Sin(Time.time * 60) * 8 * _alchShake, -460);
                 int nq = G.DiscoverableCount;
                 bool waiting = nq > 0;
-                _alchText.text = ChalkTex.Sym(nq > 0 ? $"⚗ Теории  ·  {nq}" : "⚗ Теории");
+                _alchText.text = nq > 0 ? $"⚗ Теории  ·  {nq}" : "⚗ Теории";
                 float q = waiting ? 0.5f + 0.5f * Mathf.Sin(Time.time * 4) : 0;
                 _alchBox.Clear();
                 _alchBox.Rect(Vector2.zero, new Vector2(392 + q * 8, 76 + q * 4), ChalkTex.Cyan, waiting ? 4f : 2.5f);

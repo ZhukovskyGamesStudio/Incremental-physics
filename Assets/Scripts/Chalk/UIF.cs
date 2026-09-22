@@ -35,10 +35,11 @@ namespace ChalkPhysics
             var rt = Rect("T", parent, pos, box);
             var t = rt.gameObject.AddComponent<Text>();
             t.font = ChalkTex.Font;
+            t.material = ChalkTex.TextMaterial;          // null (no shader support) leaves the default, smooth text
             t.fontSize = Mathf.RoundToInt(size * ChalkTex.FontScale);
             t.color = c;
             t.alignment = align;
-            t.text = ChalkTex.Sym(s);
+            t.text = s;
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             t.verticalOverflow = VerticalWrapMode.Overflow;

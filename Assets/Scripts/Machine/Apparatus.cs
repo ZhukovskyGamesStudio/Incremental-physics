@@ -1855,7 +1855,7 @@ namespace ChalkPhysics
                 float lp = can ? 0.5f + 0.5f * Mathf.Sin(Time.time * 4) : 0;
                 _launchBox.Clear();
                 _launchBox.Rect(Vector2.zero, new Vector2(448 + lp * 8, 74 + lp * 4), can ? ChalkTex.Yellow : new Color(1, 1, 1, 0.3f), can ? 4f : 2.5f);
-                _launchText.text = ChalkTex.Sym($"▶ ПУСК   ·   перестановок: {G.Places}");
+                _launchText.text = $"▶ ПУСК   ·   перестановок: {G.Places}";
                 _launchText.color = can ? ChalkTex.Yellow : new Color(1, 1, 1, 0.35f);
             }
             if (!lesson) { _hudText.text = ""; _censusText.text = ""; for (int i = 0; i < 4; i++) { _earn[i].gameObject.SetActive(false); _earnStr[i] = ""; } return; }

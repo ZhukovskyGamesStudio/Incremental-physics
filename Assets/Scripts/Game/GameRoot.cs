@@ -54,7 +54,7 @@ namespace ChalkPhysics
             Application.runInBackground = true;
             gameObject.AddComponent<Sfx>();
             gameObject.AddComponent<Music>();
-            FontWarmup.Attach(gameObject);               // the web build's own font: letters ready before any label
+            FontWarmup.Attach(gameObject);               // the game's own font: letters ready before any label
             GameState.DevSpeed = devSpeed;
             G = new GameState();
 
