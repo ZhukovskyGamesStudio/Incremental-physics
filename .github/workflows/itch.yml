@@ -67,15 +67,11 @@ jobs:
                       /opt/hostedtoolcache/CodeQL /usr/local/share/boost
           df -h /
 
-      - name: Cache Unity Library
-        uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-${{ matrix.target }}-${{ hashFiles('Packages/packages-lock.json') }}
-          restore-keys: |
-            Library-${{ matrix.target }}-
-            Library-
-
+      # Library НЕ кэшируем. Сборка с восстановленным Library, который не совпадает с тем,
+      # что собирается (другая платформа или изменившийся код), умирает через секунду после
+      # старта Unity с кодом 137 (SIGKILL) — так упали три прогона из трёх (Unity 6000.6,
+      # образ game-ci -3). Проходили только сборка с нуля и сборка того же коммита с тем же
+      # кэшем. С нуля WebGL собирается минут 20, зато стабильно.
       - name: Set up Unity
         uses: game-ci/unity-builder@v4
         with:
