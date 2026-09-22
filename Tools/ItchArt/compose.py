@@ -112,10 +112,11 @@ def cover():
     save(c, 'cover_1260x1000.png')
 
 
-def banner():
-    """The page header, 960 wide: the title on the board, the buddy beside it, the instruments faint around."""
+def banner(transparent=False):
+    """The page header, 960 wide: the title on the board, the buddy beside it, the instruments faint around.
+    transparent: the same without the board (and the buddy hollow, as he is drawn), to lay over any background."""
     W, H = 1920, 560                                # drawn at 2x, saved at 960x280
-    c = board(W, H, 2)
+    c = Image.new('RGBA', (W, H), (0, 0, 0, 0)) if transparent else board(W, H, 2)
     menu = raw('shot_menu')
     for box, at in (((120, 190, 300, 310), (40, 70)), ((1640, 130, 1760, 270), (1780, 40)),
                     ((220, 400, 400, 470), (90, 400)), ((1520, 395, 1720, 465), (300, 480)),
@@ -123,10 +124,25 @@ def banner():
         put(c, key(menu.crop(box)), *at)
     logo = fit(raw('logo'), h=440)
     put(c, logo, (W - logo.width) // 2 - 110, 50)
-    buddy = solid(fit(raw('buddy'), h=330))
-    put(c, buddy, (W + logo.width) // 2 - 40, 150)
-    save(c, 'banner_960x280.png', (960, 280))
-    save(c, 'banner_1920x560.png')
+    buddy = fit(raw('buddy'), h=330)
+    put(c, buddy if transparent else solid(buddy), (W + logo.width) // 2 - 40, 150)
+    if transparent:
+        save_alpha(c, 'banner_transparent_960x280.png', (960, 280))
+        save_alpha(c, 'banner_transparent_1920x560.png')
+    else:
+        save(c, 'banner_960x280.png', (960, 280))
+        save(c, 'banner_1920x560.png')
+
+
+def save_alpha(img, name, size=None):
+    """A PNG that keeps its transparency; scaled with premultiplied alpha, so edges get no dark fringe."""
+    os.makedirs(OUT, exist_ok=True)
+    if size:
+        img = img.convert('RGBa').resize(size, Image.LANCZOS).convert('RGBA')
+    path = os.path.join(OUT, name)
+    img.save(path, optimize=True)
+    print(f'{name:28} {img.size[0]}x{img.size[1]}  {os.path.getsize(path) // 1024} KB')
+    return path
 
 
 def background():
@@ -175,4 +191,4 @@ def gif(first=230, last=330, width=960, name='gameplay.gif'):
 
 
 if __name__ == '__main__':
-    cover(); banner(); background(); screenshots(); logo(); gif()
+    cover(); banner(); banner(True); background(); screenshots(); logo(); gif()
